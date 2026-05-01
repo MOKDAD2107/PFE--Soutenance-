@@ -45,7 +45,7 @@ public class AlertScheduler {
     private double humiditySolMax;
 
     // toutes les 10 minutes
-    @Scheduled(fixedRateString = "${iot.scheduler.alert.rate:6000000}", initialDelay = 0)
+    @Scheduled(fixedRateString = "${iot.scheduler.alert.rate:6000}", initialDelay = 0)
     public void checkAlert(){
         log.info("========== Scheduler vérification alertes demarre ============");
         checkSensorAlert();

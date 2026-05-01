@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name = "iot-service")
+@FeignClient(name = "IOT-SERVICE")
 public interface IotServiceRestClient {
     @GetMapping("/api/waters/water/location/{locationId}")
     List<WaterRessourceResponse> getWaterByLocationId(@PathVariable Long locationId);
@@ -24,7 +24,7 @@ public interface IotServiceRestClient {
     List<IotSensorResponse> getIotSensorByType(@PathVariable String type);
     @GetMapping("/api/sensors/sensor/active")
     List<IotSensorResponse> getIotSensorByActive();
-    @GetMapping("/api/reading/sensor/senorid/{sensorId}")
+    @GetMapping("/api/reading/sensor/sensorid/{sensorId}")
     List<SensorReadingResponse> getSensorReadingByLocationId(@PathVariable Long sensorId);
     @GetMapping("/api/environement/alerts/location/{locationId}")
     List<EnvironmentAlertResponse> getAlertByLocationId(@PathVariable Long locationId);

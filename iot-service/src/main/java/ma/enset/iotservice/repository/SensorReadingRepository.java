@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface SensorReadingRepository extends JpaRepository<SensorReading,Long> {
     List<SensorReading> findBySensorId(Long sensorId);
-    List<SensorReading> findBySensorIdOrderByReadingDateDesc(Long sensorId);
+    //List<SensorReading> findBySensorIdOrderByReadingDateDesc(Long sensorId);
 }

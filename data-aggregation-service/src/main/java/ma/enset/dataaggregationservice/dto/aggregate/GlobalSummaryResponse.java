@@ -34,7 +34,7 @@ public class GlobalSummaryResponse {
     @Builder
     public static class CitySummary{
     private Long locationId;
-    private String cityName;
+    private String city;
     private String country;
 
     //meteo
@@ -44,7 +44,7 @@ public class GlobalSummaryResponse {
     private String weatherDescription;
 
     //capteur
-    private String airQualityStatus; // NORMAL-WARNING-DANGER
+  //  private String airQualityStatus; // NORMAL-WARNING-DANGER
     //statistiques
     private int activeSensorsCount;
     private int activeAlertCount;

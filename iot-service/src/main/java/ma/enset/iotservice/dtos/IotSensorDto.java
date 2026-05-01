@@ -30,7 +30,7 @@ public class IotSensorDto {
         private Long id;
         private String name;
         private SensorType sensorType;
-        private Location location;
+        private Long locationId;
         private String description;
         private String unite;
         private boolean active;

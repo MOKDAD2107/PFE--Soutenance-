@@ -5,7 +5,7 @@ import lombok.*;
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor @Builder
 public class Location {
     private Long id;
-    private String city;
+    private String nameCity;
     private double latitude;
     private double longitude;
 

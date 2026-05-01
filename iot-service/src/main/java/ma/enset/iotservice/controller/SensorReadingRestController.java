@@ -28,13 +28,13 @@ public class SensorReadingRestController {
         return ResponseEntity.ok().body(sensorReadingService.findById(id));
     }
 
-    @GetMapping("/sensor/senorid/{sensorId}")
+    @GetMapping("/sensor/sensor/{sensorId}")
     public ResponseEntity<List<SensorReadingDto.SensorReadingResponse>> findBySensorId(@PathVariable Long sensorId){
         return ResponseEntity.ok().body(sensorReadingService.findBySensorId(sensorId));
     }
-    @GetMapping("/sensor/order/{sensorId}")
+    /*@GetMapping("/sensor/order/{sensorId}")
     public ResponseEntity<List<SensorReadingDto.SensorReadingResponse>> findBySensor(@PathVariable Long sensorId){
         return ResponseEntity.ok().body(sensorReadingService.findBySensor(sensorId));
-    }
+    }*/
 
 }

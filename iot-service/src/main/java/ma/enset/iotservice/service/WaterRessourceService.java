@@ -50,7 +50,7 @@ public class WaterRessourceService {
         return responses;
     }
     public List<WaterRessourceDto.WaterRessourceResponse> findByFillStatus(String status) {
-        List<WaterRessource> water =waterRessourceRepository.findByFillStatus("CRITIQUE");
+        List<WaterRessource> water =waterRessourceRepository.findByFillStatus(status);
         List<WaterRessourceDto.WaterRessourceResponse> response=water.stream()
                 .map(wt->waterRessourceMapper.fromWaterRessourcetoWaterRessourceResponse(wt))
                 .toList();

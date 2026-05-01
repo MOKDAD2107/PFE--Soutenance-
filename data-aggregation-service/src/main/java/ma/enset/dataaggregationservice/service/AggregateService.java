@@ -17,19 +17,70 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class AggregateService {
-
+    @Autowired
     private IotServiceRestClient iotClient;
-
+    @Autowired
     private WeatherServiceRestClient  weatherClient;
+    private List<GlobalSummaryResponse.CitySummary>buildCitySummary(
+            List<EnvironmentAlertResponse> alerts,List<IotSensorResponse>sensors){
+        Map<Long,List<IotSensorResponse>> byLocation=new HashMap<>();
+        // regrouper les capteurs par ville
+        for (IotSensorResponse sensor: sensors){
+            if (sensor.getLocationId()!=null){
+                Long locId=sensor.getLocationId();
+                byLocation.putIfAbsent(locId, new ArrayList<>());
+                byLocation.get(locId).add(sensor);
+            }
+        }
 
+        List<GlobalSummaryResponse.CitySummary> results=new ArrayList<>();
+        //resumer pour chaque ville
+        for (Long locId: byLocation.keySet()){
+            List<IotSensorResponse> locSensors=byLocation.get(locId);
+            IotSensorResponse first=locSensors.get(0);
+
+            //appel meteo
+            List<WeatherDataResponse> weather=safeCall(()->weatherClient.getWeatherByLocation(locId));
+            WeatherDataResponse latest=weather.isEmpty()?null:weather.get(0);
+
+            //compter les alertes
+            int alertCount=0;
+            for (EnvironmentAlertResponse alert:alerts){
+                if (alert.getLocation()!=null&&locId.equals(alert.getLocation().getId())){
+                    alertCount++;
+                }
+            }
+            LocationResponse loc=weatherClient.getLocationInfo(locId);
+
+        GlobalSummaryResponse.CitySummary city=GlobalSummaryResponse.CitySummary.builder()
+                .locationId(locId)
+                .city(loc.getNameCity())
+                .country(loc.getCountry())
+                .temperature(latest!=null?latest.getTemperature():0.0)
+                .humidity(latest!=null?latest.getHumidity():0.0)
+                .windSpeed(latest!=null?latest.getWindSpeed():0.0)
+                .weatherDescription(latest!=null?latest.getDescription():null)
+                .activeAlertCount(alertCount)
+                .activeSensorsCount((int)locSensors.stream().filter(IotSensorResponse::isActive).count())
+                .build();
+            results.add(city);
+    }
+        return results;
+    }
+
+    private Map<String, Long> computeStat(List<WaterRessourceResponse> water){
+        return water.stream()
+                .filter(w -> w != null && w.getFillStatus() != null)
+                .collect(Collectors.groupingBy(WaterRessourceResponse::getFillStatus,
+                        Collectors.counting()));
+    }
 
     private <T> List<T> safeCall(Supplier<List<T>> supplier) {
         try {
@@ -58,8 +109,15 @@ public class AggregateService {
                 safeCall(()->weatherClient.getForecastByLocation(locationId));
         List<IotSensorResponse> sensor=
                 safeCall(()->iotClient.getIotSensorByLocationId(locationId));
-        List<SensorReadingResponse> reading=
-                safeCall(()->iotClient.getSensorReadingByLocationId(locationId));
+        List<SensorReadingResponse> rd=new ArrayList<>();
+        for (IotSensorResponse s:sensor){
+            List<SensorReadingResponse> reading=
+                    safeCall(()->iotClient.getSensorReadingByLocationId(s.getId()));
+            if (!reading.isEmpty()){
+                rd.add(reading.get(0));
+            }
+        }
+
         List<EnvironmentAlertResponse> alert=
                 safeCall(()->iotClient.getAlertByLocationId(locationId));
         //meteo actuelle , juste la 1ere
@@ -67,10 +125,16 @@ public class AggregateService {
         return DashboardResponse.builder()
                 .locationId(locationId)
                 .cityName(getCityName(currentWeather,sensor))
+                .country(currentWeather!=null&&currentWeather.getLocation()!=null
+                        ?currentWeather.getLocation().getCountry():"MAROC")
+                .latitude(currentWeather!=null&&currentWeather.getLocation()!=null
+                        ?currentWeather.getLocation().getLatitude() :0.0)
+                .longitude(currentWeather!=null&&currentWeather.getLocation()!=null
+                        ?currentWeather.getLocation().getLongitude() : 0.0)
                 .weatherData(currentWeather)
                 .forecastData(forecast)
                 .sensor(sensor)
-                .reading(reading)
+                .reading(rd)
                 .alerts(alert)
                 .generatedAt(LocalDateTime.now())
                 .build();
@@ -85,10 +149,12 @@ public class AggregateService {
                 safeCall(()->iotClient.getIotSensorByActive());
         List<WaterRessourceResponse> criticalWater =
                 safeCall(()->iotClient.getWaterByStatus("CRITIQUE"));
+        List<GlobalSummaryResponse.CitySummary> cities=buildCitySummary(alerts,sensor);
         return GlobalSummaryResponse.builder()
                 .allActivesAlerts(alerts)
                 .criticalWaterResources(criticalWater)
                 .activeSensor(sensor)
+                .cities(cities)
                 .totalActiveAlerts(alerts.size())
                 .totalActiveSensors(sensor.size())
                 .totalCriticalWaterResources(criticalWater.size())
@@ -103,12 +169,9 @@ public class AggregateService {
         List<WaterRessourceResponse>rivieres=
                 safeCall(()->iotClient.getWaterByType("RIVIERE"));
         List<WaterRessourceResponse>lacs=
-            safeCall(()->iotClient.getWaterByType("LACS"));
+            safeCall(()->iotClient.getWaterByType("LAC"));
         List<WaterRessourceResponse>nappe=
            safeCall(()->iotClient.getWaterByType("NAPPE_PHREATIQUE"));
-
-        long critique=barrages.stream().filter(b->"CRITIQUE".equals(b.getFillStatus())).count();
-
 
         return WaterStatusResponse.builder()
                 .barrages(barrages)
@@ -116,10 +179,15 @@ public class AggregateService {
                 .lacs(lacs)
                 .nappe(nappe)
                 .totalBarrages(barrages.size())
+                .barrageStats(computeStat(barrages))
                 .totalRiveries(rivieres.size())
+                .riviereStats(computeStat(rivieres))
                 .totalLacs(lacs.size())
+                .lacsStats(computeStat(lacs))
                 .totalNappe(nappe.size())
+                .nappeStats(computeStat(nappe))
+                .generatedAt(LocalDateTime.now())
                 .build();
-
     }
+
 }

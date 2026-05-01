@@ -37,10 +37,6 @@ public class DashboardResponse {
     //alerte active dans cette ville
     private List<EnvironmentAlertResponse> alerts;
 
-    // Score de confort environnemental (0-10)
-    private Double comfortScore;
-    private String comfortLabel; //Excellent-Bon-Acceptable-Mauvais-Dangereux
-
     private LocalDateTime generatedAt;
 
 }

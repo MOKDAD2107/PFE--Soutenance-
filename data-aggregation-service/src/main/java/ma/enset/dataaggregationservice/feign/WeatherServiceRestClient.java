@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name = "weather-service")
+@FeignClient(name = "WEATHER-SERVICE")
 public interface WeatherServiceRestClient {
 
     @GetMapping("/api/weathers/weather/location/{locationId}")

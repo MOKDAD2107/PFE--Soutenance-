@@ -14,3 +14,8 @@ spring:
           uri: lb://IOT-SERVICE
           predicates:
             - Path=/api/waters/**,/api/sensors/**,/api/reading/**,/api/environment/**
+
+        - id: data-route
+          uri: lb://DATA-AGGREGATION-SERVICE
+          predicates:
+              - Path=/api/aggregate/**

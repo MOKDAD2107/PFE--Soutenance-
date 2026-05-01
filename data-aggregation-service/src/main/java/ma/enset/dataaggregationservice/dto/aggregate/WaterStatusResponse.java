@@ -8,6 +8,8 @@ import ma.enset.dataaggregationservice.dto.iot.WaterRessourceResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+
 @Data @AllArgsConstructor
 @NoArgsConstructor @Builder
 public class WaterStatusResponse {
@@ -16,16 +18,16 @@ public class WaterStatusResponse {
     private List<WaterRessourceResponse> lacs;
     private List<WaterRessourceResponse> nappe;
 
-    //Statistiques des barrages
+    private Map<String,Long> barrageStats;
+    private Map<String,Long> nappeStats;
+    private Map<String,Long> lacsStats;
+    private Map<String,Long> riviereStats;
+
     private int totalBarrages;
-    private int totalRiveries;
     private int totalLacs;
+    private int totalRiveries;
     private int totalNappe;
-    private int barragesCritiques;
-    private int barragesBas;
-    private int barragesNormaux;
-    private int barragesEleves;
-    private double fillPercentage;
+
     private LocalDateTime generatedAt;
 
 }

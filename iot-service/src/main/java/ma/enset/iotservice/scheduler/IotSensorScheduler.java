@@ -23,7 +23,7 @@ public class IotSensorScheduler {
     private final SensorReadingRepository sensorReadingRepository;
     private final Random random=new Random();
     // toutes les 5 min
-    @Scheduled(fixedRateString="${iot.scheduler.sensor.rate:600000}",initialDelayString = "${iot.scheduler.initial.delay:30000}")
+    @Scheduled(fixedRateString="${iot.scheduler.sensor.rate:6000}",initialDelayString = "${iot.scheduler.initial.delay:30000}")
     public void simulateSensorReading(){
         log.info("================== Scheduler capteur Iot demarre ===================");
         List<IotSensor> sensors=iotSensorService.findActiveEntities();

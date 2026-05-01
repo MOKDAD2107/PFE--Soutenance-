@@ -49,13 +49,13 @@ public class SensorReadingService {
                 .toList();
         return responses;
     }
-    public List<SensorReadingDto.SensorReadingResponse> findBySensor(Long sensorId){
+    /*public List<SensorReadingDto.SensorReadingResponse> findBySensor(Long sensorId){
         List<SensorReading> sensors=sensorReadingRepository.findBySensorIdOrderByReadingDateDesc(sensorId);
         List<SensorReadingDto.SensorReadingResponse> responses=sensors.stream()
                 .map(se->sensorReadingMapper.fromSensorToSensorReadingResponse(se))
                 .toList();
         return responses;
-    }
+    }*/
 
     private String computeStatus(double value,IotSensor iotSensor){
         return switch (iotSensor.getSensorType()){
