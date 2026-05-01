@@ -12,6 +12,9 @@ target/
 *.iml
 *.ipr
 
+# Ignorer le dossier de configuration local
+config-repo/
+
 ### Eclipse ###
 .apt_generated
 .classpath
