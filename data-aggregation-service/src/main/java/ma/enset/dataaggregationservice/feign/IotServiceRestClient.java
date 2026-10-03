@@ -4,13 +4,14 @@ import ma.enset.dataaggregationservice.dto.iot.EnvironmentAlertResponse;
 import ma.enset.dataaggregationservice.dto.iot.IotSensorResponse;
 import ma.enset.dataaggregationservice.dto.iot.SensorReadingResponse;
 import ma.enset.dataaggregationservice.dto.iot.WaterRessourceResponse;
+import ma.enset.dataaggregationservice.interceptor.FeignInterceptors;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name = "IOT-SERVICE")
+@FeignClient(name = "IOT-SERVICE",configuration = FeignInterceptors.class)
 public interface IotServiceRestClient {
     @GetMapping("/api/waters/water/location/{locationId}")
     List<WaterRessourceResponse> getWaterByLocationId(@PathVariable Long locationId);
@@ -24,13 +25,13 @@ public interface IotServiceRestClient {
     List<IotSensorResponse> getIotSensorByType(@PathVariable String type);
     @GetMapping("/api/sensors/sensor/active")
     List<IotSensorResponse> getIotSensorByActive();
-    @GetMapping("/api/reading/sensor/sensorid/{sensorId}")
+    @GetMapping("/api/reading/sensor/sensor/{sensorId}")
     List<SensorReadingResponse> getSensorReadingByLocationId(@PathVariable Long sensorId);
-    @GetMapping("/api/environement/alerts/location/{locationId}")
+    @GetMapping("/api/environnement/alerts/location/{locationId}")
     List<EnvironmentAlertResponse> getAlertByLocationId(@PathVariable Long locationId);
-    @GetMapping("/api/environement/alerts/severity/{severity}")
+    @GetMapping("/api/environnement/alerts/severity/{severity}")
     List<EnvironmentAlertResponse> getAlertBySeverity(@PathVariable String severity);
-    @GetMapping("/api/environement/alerts/status/{status}")
+    @GetMapping("/api/environnement/alerts/status/{status}")
     List<EnvironmentAlertResponse> getAlertByStatus(@PathVariable String status);
 
 }

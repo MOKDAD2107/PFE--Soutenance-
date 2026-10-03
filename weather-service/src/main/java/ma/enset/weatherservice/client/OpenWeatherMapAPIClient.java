@@ -24,24 +24,32 @@ public class OpenWeatherMapAPIClient {
     public OpenWeatherMapResponse getResponse(String cityname) {
 
         log.info("Appel OpenWeatherMap -> ville: {}", cityname);
+
         try {
-            return openWeatherMapClient.get()
+            OpenWeatherMapResponse response = openWeatherMapClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/weather")
                             .queryParam("q", cityname + ",MA")
                             .queryParam("appid", properties.getKey())
                             .queryParam("units", properties.getUnits())
                             .queryParam("lang", "fr")
-                            .build()
-                    )
+                            .build())
                     .retrieve()
                     .bodyToMono(OpenWeatherMapResponse.class)
                     .block();
+
+            System.out.println("Weather list = " + response.getWeather());
+
+            if (response.getWeather() != null && !response.getWeather().isEmpty()) {
+                System.out.println("Description = " + response.getWeather().get(0).getDescription());
+                System.out.println("Icon = " + response.getWeather().get(0).getIcon());
+            }
+
+            return response;
         }catch (WebClientResponseException e) {
             log.error("Erreur API pour: {}:{}",cityname,e.getMessage());
             throw new ExternalApiException("Erreur Open Weather Map "+cityname,e);
-        }
-    }
+    }}
     public OpenWeatherForecastResponse getForecastResponse(String cityname){
         log.info("Appel prevision OpenWeatherMap -> ville: {}", cityname);
         try {

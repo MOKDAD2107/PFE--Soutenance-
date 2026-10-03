@@ -28,8 +28,13 @@ public class WaterRessourceScheduler {
         }
 
         for (WaterRessource resource : resources) {
-            // Variation aléatoire entre -2% et +1% (les barrages se vident lentement)
-            double variation = (-2.0 + random.nextDouble() * 3.0);
+            if (resource.getCapaciteMax() <= 0) {
+                log.warn("Ressource {} avec capaciteMax invalide ({}), ignorée",
+                        resource.getName(), resource.getCapaciteMax());
+                continue;
+            }
+            // Variation aléatoire entre -1.5% et +1% car les barrages se vident lentement.
+            double variation = (-1.5 + random.nextDouble() * 3.0);
             double newLevel = resource.getCurrentLevel() + (resource.getCapaciteMax() * variation / 100);
 
             // Garde le niveau dans les bornes [0, capaciteMax]

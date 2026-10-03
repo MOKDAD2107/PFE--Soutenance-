@@ -1,7 +1,11 @@
 package ma.enset.weatherservice.controller;
 
 import ma.enset.weatherservice.dtos.WeatherForecastDto;
+import ma.enset.weatherservice.entities.Location;
 import ma.enset.weatherservice.entities.WeatherForecast;
+import ma.enset.weatherservice.exceptions.RessourceNotFoundException;
+import ma.enset.weatherservice.repository.LocationRepository;
+import ma.enset.weatherservice.service.LocationService;
 import ma.enset.weatherservice.service.WeatherForecastService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +20,19 @@ import java.util.List;
 public class WeatherForecastController {
     @Autowired
     private WeatherForecastService weatherForecastService;
+    @Autowired
+    private LocationRepository locationRepository;
     @PostMapping()
     public ResponseEntity<WeatherForecastDto.WeatherForecastResponse> save (@RequestBody WeatherForecastDto.WeatherForecastRequest request){
         return ResponseEntity.status(HttpStatus.CREATED).body(weatherForecastService.save(request));
+    }
+    // WeatherForecastController
+    @PostMapping("/refresh/{locationId}")
+    public ResponseEntity<String> refreshForecast(@PathVariable Long locationId) {
+        Location location = locationRepository.findById(locationId)
+                .orElseThrow(() -> new RessourceNotFoundException("Location " + locationId));
+        weatherForecastService.SaveForecastForLocation(location);
+        return ResponseEntity.ok("Prévisions rafraîchies pour " + location.getNameCity());
     }
     @GetMapping("/weatherforecast")
     public ResponseEntity<List<WeatherForecastDto.WeatherForecastResponse>> findAll(){

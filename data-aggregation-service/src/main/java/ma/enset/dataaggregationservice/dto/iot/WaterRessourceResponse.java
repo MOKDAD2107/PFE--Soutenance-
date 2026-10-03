@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class WaterRessourceResponse {
     private Long id;
     private String name;
+    private Long cityLocationId;
     private String ressourceType;
     private Double capaciteMax;
     private Double currentLevel;
@@ -22,4 +23,6 @@ public class WaterRessourceResponse {
     private String fillStatus;
     private LocalDateTime lastUpdate;
     private LocationResponse location;
+    private Double seuilBas;
+    private Double seuilCritique;
 }

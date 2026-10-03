@@ -3,9 +3,7 @@ package ma.enset.weatherservice.scheduler;
 
 import lombok.extern.slf4j.Slf4j;
 import ma.enset.weatherservice.client.OpenWeatherMapAPIClient;
-import ma.enset.weatherservice.config.OpenWeatherMapProperties;
 import ma.enset.weatherservice.dtos.OpenWeatherForecastResponse;
-import ma.enset.weatherservice.dtos.OpenWeatherMapResponse;
 import ma.enset.weatherservice.entities.Location;
 import ma.enset.weatherservice.entities.WeatherForecast;
 import ma.enset.weatherservice.enums.ApiSource;
@@ -18,14 +16,13 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Component
 @Slf4j
 public class WeatherPrevisionScheduler {
     @Autowired
     private OpenWeatherMapAPIClient client; // appeler l'API meteo
-    @Autowired
-    private OpenWeatherMapProperties properties; //acceder a la config pour les listes des villes
     @Autowired
     private LocationRepository locationRepository; //sauvegarder les villes
     @Autowired
@@ -36,24 +33,32 @@ public class WeatherPrevisionScheduler {
     @Scheduled(fixedRateString = "${openweathermap.scheduler.forecast-rate:3600000}")
     public void fetchForecast(){
         log.info("============= Scheduler Prevision demarre ================");
-        for (String city : properties.getCities()){
+        List<Location> locations = locationRepository.findAll();
+        log.info("Nombre de villes à traiter : {}", locations.size());
+
+        for (Location location : locations){
         try{
-            saveForecastForCity(city);
+            saveForecastForCity(location);
         }catch (ExternalApiException e){
-            log.error("Erreur pour {} : {}",city,e.getMessage());
+            log.error("Erreur pour {} : {}",location.getNameCity(),e.getMessage());
         }
         }
         log.info("================= Scheduler prevision terminer ===============");
     }
-    private void saveForecastForCity(String city){
-        OpenWeatherForecastResponse response =client.getForecastResponse(city);
-        if(response==null ||response.getList()==null)return;
-
-        Location location =findOrCreateLocations(city,response);
-        if(location==null){
-            log.warn("Location'{}' non trouvee - Lance d'abord fetchCurrentWeather", city);
+    private void saveForecastForCity(Location location){
+        OpenWeatherForecastResponse response =client.getForecastResponse(location.getNameCity());
+        if (response == null) {
+            log.error("OpenWeather n'a retourné aucune réponse pour {}", location.getNameCity());
             return;
-        };
+        }
+
+        if (response.getList() == null) {
+            log.error("Liste des prévisions vide pour {}", location.getNameCity());
+            return;
+        }
+
+        //  Supprimer les anciennes prévisions avant de réinsérer
+        weatherForecastRepository.deleteByLocationId(location.getId());
     response.getList().stream()
             .filter(item->item.getDtTxt().contains("12:00:00"))
             .forEach(item->{
@@ -69,16 +74,7 @@ public class WeatherPrevisionScheduler {
                         .build();
                 weatherForecastRepository.save(forecast);
             });
-        log.info("Prévisions sauvegardées pour {}", city);
+        log.info("Prévisions sauvegardées pour {}", location.getNameCity());
     }
-    private Location findOrCreateLocations(String cityname , OpenWeatherForecastResponse response){
-        return locationRepository.findByNameCity(cityname).orElseGet(()->locationRepository.save(
-                Location.builder()
-                        .nameCity(cityname)
-                        .country("Maroc")
-                        .latitude(response.getCity().getCoord().getLat())
-                        .longitude(response.getCity().getCoord().getLon())
-                        .build()
-        ));
-    }
+
 }

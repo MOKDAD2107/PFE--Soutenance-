@@ -36,7 +36,14 @@ public class OpenWeatherMapResponse {
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class WeatherDescription{
+        @JsonProperty("description")
         private String description;
+
+        @JsonProperty("icon")
+        private String icon;
+
+        @JsonProperty("main")
+        private String main;
     }
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -49,6 +56,12 @@ public class OpenWeatherMapResponse {
     public String getMainDescription(){
         if(weather!=null&&!weather.isEmpty()){
             return weather.get(0).getDescription();
+        }
+        return null;
+    }
+    public String getMainIcon(){
+        if(weather!=null&&!weather.isEmpty()){
+            return weather.get(0).getIcon();
         }
         return null;
     }

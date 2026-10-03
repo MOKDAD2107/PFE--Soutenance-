@@ -1,0 +1,42 @@
+<header class="app-header">
+  <div class="brand">
+    <div class="zellige"></div>
+    <div>
+      <div class="brand-name display">EcoWatch</div>
+      <div class="brand-sub">SURVEILLANCE ENVIRONNEMENTALE — MAROC</div>
+    </div>
+  </div>
+
+  @if (userRoles.includes('USER')) {
+    <nav class="app-nav">
+      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+      <a routerLink="/map" routerLinkActive="active">Carte</a>
+      <a routerLink="/water-status" routerLinkActive="active">Ressources</a>
+      <a routerLink="/alerts" routerLinkActive="active">Alertes</a>
+    </nav>
+  }
+
+  <div class="header-right">
+
+    <div class="user-menu">
+      @if (isLoggedIn) {
+        <button class="user-pill" (click)="toggleUserMenu()">
+          <span class="user-dot"></span>{{ username }} ▾
+        </button>
+        @if (userMenuOpen) {
+          <div class="user-dropdown">
+            <a class="dropdown-item logout" (click)="handlelogout()">Déconnexion</a>
+          </div>
+        }
+      } @else {
+        <button class="login-btn" (click)="handlelogin()">Login</button>
+      }
+    </div>
+  </div>
+</header>
+
+<router-outlet></router-outlet>
+
+@if (userRoles.includes('USER')) {
+  <app-chatbot></app-chatbot>
+}

@@ -20,6 +20,7 @@ public class WeatherDataMapper {
                 .uvIndex(weatherDataRequest.getUvIndex())
                 .windSpeed(weatherDataRequest.getWindSpeed())
                 .description(weatherDataRequest.getDescription())
+                .weatherIcon(weatherDataRequest.getWeatherIcon())
                 .apiSource(weatherDataRequest.getSourceApi())
                 .location(location)
                 .build();
@@ -35,6 +36,7 @@ public class WeatherDataMapper {
                 .uvIndex(weatherData.getUvIndex())
                 .windSpeed(weatherData.getWindSpeed())
                 .description(weatherData.getDescription())
+                .weatherIcon(weatherData.getWeatherIcon())
                 .sourceApi(weatherData.getApiSource())
                 .location(locationMapper.fromLocationtoLocationSummary(weatherData.getLocation()))
                 .build();

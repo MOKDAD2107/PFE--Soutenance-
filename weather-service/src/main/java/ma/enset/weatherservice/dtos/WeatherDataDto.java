@@ -26,6 +26,7 @@ public class WeatherDataDto {
         private Double pressure;
         private Double uvIndex;
         private String description;
+        private String weatherIcon;
         @NotNull(message = "La source API est obligatoire")
         private ApiSource sourceApi;
     }
@@ -39,6 +40,7 @@ public class WeatherDataDto {
         private Double pressure;
         private Double uvIndex;
         private String description;
+        private String weatherIcon;
         private ApiSource sourceApi;
         private LocationDto.LocationSummary location;
     }

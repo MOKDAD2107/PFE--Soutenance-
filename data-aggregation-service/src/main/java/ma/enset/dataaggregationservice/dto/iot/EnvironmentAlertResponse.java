@@ -19,6 +19,7 @@ public class EnvironmentAlertResponse {
     private String severity;
     private String status;
     private LocationResponse location;
+    private Long locationId;
     private Long sensorId;
     private Double triggerValue;
     private Double seuilDepasse;

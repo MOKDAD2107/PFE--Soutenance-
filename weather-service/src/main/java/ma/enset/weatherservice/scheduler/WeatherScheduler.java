@@ -3,7 +3,6 @@ package ma.enset.weatherservice.scheduler;
 
 import lombok.extern.slf4j.Slf4j;
 import ma.enset.weatherservice.client.OpenWeatherMapAPIClient;
-import ma.enset.weatherservice.config.OpenWeatherMapProperties;
 import ma.enset.weatherservice.dtos.OpenWeatherMapResponse;
 import ma.enset.weatherservice.entities.Location;
 import ma.enset.weatherservice.entities.WeatherData;
@@ -16,7 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -25,31 +24,28 @@ public class WeatherScheduler {
     @Autowired
     private OpenWeatherMapAPIClient client; // appeler l'API meteo
     @Autowired
-    private OpenWeatherMapProperties properties; //acceder a la config pour les listes des villes
-    @Autowired
     private LocationRepository  locationRepository; //sauvegarder les villes
     @Autowired
     private WeatherDataRepository  weatherDataRepository; //sauvegarder la meteo actuelle
-
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"); //convertir une chaine de date en localDateTime
 
     // tous les 10 minutes
     @Scheduled(fixedRateString = "${openweathermap.scheduler.rate:600000}")
     public void fetchCurrentWeather(){
     log.info("============ Scheduler meteo demmare ============");
-    for (String city : properties.getCities()){
+        List<Location> locations=locationRepository.findAll();
+    for (Location location:locations){
      try {
-         saveweatherForcity(city);
+         saveWeatherForCity(location);
      }catch (ExternalApiException e){
-         log.error("Erreur pour {} : {}", city, e.getMessage());
+         log.error("Erreur pour {} : {}", location.getNameCity(), e.getMessage());
      }
     }
         log.info("=== Scheduler météo terminé ===");
     }
-    private void saveweatherForcity(String cityname){
-        OpenWeatherMapResponse response =client.getResponse(cityname);
+    private void saveWeatherForCity(Location location){
+        OpenWeatherMapResponse response =client.getResponse(location.getNameCity());
         if (response==null)return ;
-        Location location = findOrCreateLocation(cityname,response);
+
         WeatherData data = WeatherData.builder()
                 .dateTime(LocalDateTime.now())
                 .temperature(response.getMainData().getTemp())
@@ -57,20 +53,11 @@ public class WeatherScheduler {
                 .pressure(response.getMainData().getPressure())
                 .windSpeed(response.getWind()!=null ?response.getWind().getSpeed():null)
                 .description(response.getMainDescription())
+                .weatherIcon(response.getMainIcon())
                 .apiSource(ApiSource.OPEN_WEATHER_MAP)
                 .location(location)
                 .build();
         weatherDataRepository.save(data);
     }
-    private Location findOrCreateLocation(String cityname ,OpenWeatherMapResponse response){
-        return locationRepository.findByNameCity(cityname).orElseGet(()->locationRepository.save(
-                Location.builder()
-                        .nameCity(cityname)
-                        .country("Maroc")
 
-                        .latitude(response.getCoord().getLat())
-                        .longitude(response.getCoord().getLon())
-                        .build()
-        ));
-    }
 }

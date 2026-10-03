@@ -21,9 +21,11 @@ public class EnvironmentalAlertDto {
         private AlertSeverity severity;
         private AlertStatus status;
         private Location location;
+        private Long locationId;
         private Long sensorId;
         private Double triggerValue;
         private Double seuilDepasse;
+        private String resolutionNote;
         private LocalDateTime triggeredAt;
         private LocalDateTime resolvedAt;
     }

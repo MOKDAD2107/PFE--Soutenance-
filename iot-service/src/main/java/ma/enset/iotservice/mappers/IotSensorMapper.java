@@ -14,6 +14,7 @@ public class IotSensorMapper {
                 .sensorType(iotSensorRequest.getSensorType())
                 .unite(iotSensorRequest.getUnite())
                 .description(iotSensorRequest.getDescription())
+                .locationId(location != null ? location.getId() : null)
                 .location(location)
                 .build();
     }

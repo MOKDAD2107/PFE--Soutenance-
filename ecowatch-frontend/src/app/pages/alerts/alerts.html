@@ -1,0 +1,100 @@
+<div class="section-title">
+  Alertes <span class="count">{{ filteredAlerts.length }} affichée(s)</span>
+  @if (newAlertsCount > 0) {
+    <span class="new-badge" (click)="dismissNewBadge()">{{ newAlertsCount }} nouvelle(s) — actualiser</span>
+  }
+</div>
+
+<div class="tiles" style="grid-template-columns:repeat(6,1fr)">
+  <div class="tile"><div class="tile-val red">{{ tileCritical }}</div><div class="tile-label">Critiques</div></div>
+  <div class="tile"><div class="tile-val red">{{ tileHigh }}</div><div class="tile-label">Élevées</div></div>
+  <div class="tile"><div class="tile-val ochre">{{ tileMedium }}</div><div class="tile-label">Moyennes</div></div>
+  <div class="tile"><div class="tile-val">{{ tileLow }}</div><div class="tile-label">Faibles</div></div>
+  <div class="tile"><div class="tile-val green">{{ tileResolved }}</div><div class="tile-label">Résolues</div></div>
+  <div class="tile"><div class="tile-val">{{ tileIgnored }}</div><div class="tile-label">Ignorées</div></div>
+</div>
+
+<div class="res-tabs">
+  <div class="res-tab" [class.active]="activeDomaine==='all'" (click)="setDomain('all')">Toutes ({{ domainCounts()['all'] }})</div>
+  @for (d of domainKeys; track d) {
+    <div class="res-tab" [class.active]="activeDomaine===d" (click)="setDomain(d)">
+      {{ domainLabels[d] }} ({{ domainCounts()[d] }})
+    </div>
+  }
+</div>
+
+<div class="alert-toolbar">
+  <input class="map-search" type="text" placeholder="Rechercher (ville, type, message)…"
+         [ngModel]="searchText" (ngModelChange)="onSearchChange($event)" />
+  <select class="sort-select" [ngModel]="triMode" (ngModelChange)="onSortChange($event)">
+    <option value="recent">Plus récentes</option>
+    <option value="severity">Sévérité</option>
+    <option value="ville">Ville</option>
+  </select>
+</div>
+
+<div class="alert-filters">
+  <div class="pill" [class.active]="activeFilter==='all'" (click)="setFilter('all')">Toutes</div>
+  <div class="pill f-crit" [class.active]="activeFilter==='CRITICAL'" (click)="setFilter('CRITICAL')">Critique</div>
+  <div class="pill f-high" [class.active]="activeFilter==='HIGH'" (click)="setFilter('HIGH')">Élevée</div>
+  <div class="pill" [class.active]="activeFilter==='MEDIUM'" (click)="setFilter('MEDIUM')">Moyenne</div>
+  <div class="pill" [class.active]="activeFilter==='LOW'" (click)="setFilter('LOW')">Faible</div>
+  <div class="pill" [class.active]="activeFilter==='RESOLVED'" (click)="setFilter('RESOLVED')">Résolues</div>
+  <div class="pill" [class.active]="activeFilter==='IGNORED'" (click)="setFilter('IGNORED')">Ignorées</div>
+</div>
+
+@if (loading) {
+  <div class="loading-state">Chargement des alertes…</div>
+} @else if (filteredAlerts.length === 0) {
+  <div class="empty-state">Aucune alerte ne correspond à ces filtres.</div>
+} @else {
+  <div id="alertList">
+    @for (a of filteredAlerts; track a.id) {
+      <div class="alert-row" [ngClass]="a.severity.toLowerCase()" [class.resolved]="a.status !== 'ACTIVE'">
+        <span class="alert-sev" [ngClass]="a.severity.toLowerCase()">{{ severityLabel(a.severity) }}</span>
+        <div class="alert-body" (click)="goToSource(a)">
+          <div class="alert-type">{{ typeLabel(a.alertType) }}</div>
+          <div class="alert-msg">{{ a.message }}</div>
+          <div class="alert-meta">
+            {{ a.location?.nameCity }} · {{ a.triggeredAt | date:'dd/MM HH:mm' }} · {{ statusLabel(a.status) }}
+          </div>
+          @if (a.resolutionNote) {
+            <div class="alert-note">Note : {{ a.resolutionNote }}</div>
+          }
+        </div>
+        <div class="alert-actions">
+          @if (a.status === 'ACTIVE') {
+            @if (isAdmin) {
+              <button (click)="$event.stopPropagation(); openAction(a, 'resolve')">Résoudre</button>
+              <button (click)="$event.stopPropagation(); openAction(a, 'ignore')">Ignorer</button>
+            } @else {
+              <span class="admin-only-hint">Réservé admin</span>
+            }
+          } @else {
+            <button disabled class="treated-btn">Traitée</button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (actionTarget && actionType) {
+  <div class="modal-backdrop" (click)="closeAction()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-title">{{ actionType === 'resolve' ? 'Résoudre' : 'Ignorer' }} l'alerte</div>
+      <div class="modal-alert-summary">{{ typeLabel(actionTarget.alertType) }} — {{ actionTarget.message }}</div>
+      <label class="modal-label">Note (optionnelle)</label>
+      <textarea class="modal-textarea" rows="3" [(ngModel)]="actionNote" placeholder="Raison, action effectuée…"></textarea>
+      @if (actionError) {
+        <div class="modal-error">{{ actionError }}</div>
+      }
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" (click)="closeAction()" [disabled]="actionSaving">Annuler</button>
+        <button class="modal-btn-confirm" (click)="confirmAction()" [disabled]="actionSaving">
+          {{ actionSaving ? 'Enregistrement…' : 'Confirmer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

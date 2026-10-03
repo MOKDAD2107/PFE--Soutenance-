@@ -26,6 +26,8 @@ public class GlobalSummaryResponse {
     private int totalActiveAlerts;
     private int totalCriticalWaterResources;
     private Double averageTemperature;
+    private Double averageAirQuality;
+    private Double averageDust;
 
     private LocalDateTime generatedAt;
 
@@ -36,12 +38,15 @@ public class GlobalSummaryResponse {
     private Long locationId;
     private String city;
     private String country;
+    private Double latitude;
+    private Double longitude;
 
     //meteo
     private double temperature;
     private double humidity;;
     private double windSpeed;
     private String weatherDescription;
+    private String weatherIcon;
 
     //capteur
   //  private String airQualityStatus; // NORMAL-WARNING-DANGER

@@ -7,7 +7,6 @@ import ma.enset.iotservice.entities.IotSensor;
 import ma.enset.iotservice.entities.SensorReading;
 import ma.enset.iotservice.entities.WaterRessource;
 import ma.enset.iotservice.enums.AlertSeverity;
-import ma.enset.iotservice.enums.AlertStatus;
 import ma.enset.iotservice.enums.SensorType;
 import ma.enset.iotservice.model.Location;
 import ma.enset.iotservice.repository.SensorReadingRepository;
@@ -17,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -45,7 +45,7 @@ public class AlertScheduler {
     private double humiditySolMax;
 
     // toutes les 10 minutes
-    @Scheduled(fixedRateString = "${iot.scheduler.alert.rate:6000}", initialDelay = 0)
+    @Scheduled(fixedRateString = "${iot.scheduler.alert.rate:300000}", initialDelay = 0)
     public void checkAlert(){
         log.info("========== Scheduler vérification alertes demarre ============");
         checkSensorAlert();
@@ -54,12 +54,11 @@ public class AlertScheduler {
     }
 
     private void checkSensorAlert() {
+        LocalDateTime since = LocalDateTime.now().minusMinutes(10);
 
         // recuperer les 100 derniers lectures de danger
-        List<SensorReading> dangerReading = sensorReadingRepository.findAll().stream()
-                .filter(r -> "DANGER".equals(r.getStatus()))
-                .limit(100)
-                .toList();
+        List<SensorReading> dangerReading = sensorReadingRepository
+                .findByStatusAndReadingDateAfter("DANGER", since);
 
         for (SensorReading reading : dangerReading) {
             IotSensor sensor = reading.getIotSensor();
@@ -75,13 +74,14 @@ public class AlertScheduler {
             }
             String alertType = sensor.getSensorType().name() + "_HIGH";
             double seuil = getSeuilBySensorType(sensor.getSensorType());
-            boolean alertDejaExists=environmentalService.existActiveAlertForSensor(sensor.getLocationId());
+            boolean alertDejaExists=environmentalService.existActiveAlertForSensor(sensor.getId());
 
             if (!alertDejaExists) {
                 AlertSeverity severity = getSeverityBySensorType(sensor.getSensorType());
                 EnvironmentalAlert alert = EnvironmentalAlert.builder()
                         .alertType(alertType)
-                        .message("Seuil critique depasse : " + reading.getIotSensor().getName() + ":" + reading.getValeur() + reading.getUnite())
+                        .message("Seuil critique depasse : " + reading.getIotSensor().getName() + ":" + reading.getValeur()
+                                + reading.getUnite())
                         .alertSeverity(severity)
                         .locationId(sensor.getLocationId())
                         .location(Location.builder()
@@ -103,8 +103,9 @@ public class AlertScheduler {
 
         List<WaterRessource> ressources=waterRessourceService.findAllEntities();
         for (WaterRessource ressource : ressources){
-            if (ressource.getLocationId() == null) {
-                log.warn("Ressource eau {} sans locationId, ignorée", ressource.getId());
+            Long cityId = ressource.getCityLocationId();
+            if (cityId == null) {
+                log.warn("Ressource eau {} sans locationId, ignorée", ressource.getName());
                 continue;
             }
 
@@ -122,23 +123,24 @@ public class AlertScheduler {
 
             }
             String type="WATER_LEVEL "+ressource.getFillStatus();
-            boolean alertType=environmentalService.existsLocationIdAlertTyeStatus(ressource.getLocationId(),type);
-            if (severity!=null&&!alertType){
+            environmentalService.resolveObsoleteAlertsForSensor(ressource.getId(),type);
+            boolean alertExists = environmentalService.existsBySensorIdAndAlertTypeAndStatus(ressource.getId(), type);
+            if (severity!=null&&!alertExists){
                 EnvironmentalAlert alerts= EnvironmentalAlert.builder()
                         .alertType(type)
                         .message(message)
                         .alertSeverity(severity)
-                        .locationId(ressource.getLocationId())
+                        .locationId(cityId)
                         .sensorId(ressource.getId() != null ? ressource.getId() : null)
                         .location(Location.builder()
-                                .id(ressource.getLocationId()).build())
+                                .id(cityId).build())
                         .triggerValue(pct)
                         .seuilDepasse(pct<=waterLevelCritical ?waterLevelCritical:waterLevelLow)
                         .build();
                 environmentalService.createAlert(alerts);
-                log.warn("Alerte eau créée : {}", message);
+                log.warn("Alerte eau créée : {}:{}",cityId,message);
             }else {
-                log.info("Alerte déjà active pour water {} ({}), ignorée", ressource.getName(), alertType);
+                log.info("Alerte déjà active pour water {} ({}), ignorée", ressource.getName(), alertExists);
             }
         }
 
@@ -150,7 +152,7 @@ public class AlertScheduler {
             case TEMPERATURE -> temperatureMax;
             case CO2 -> co2Max;
             case HUMIDITY_SOL ->humiditySolMax;
-            default -> 0;
+          //  default -> 0;
         };
     }
 

@@ -8,7 +8,6 @@ import ma.enset.weatherservice.repository.LocationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,9 +17,7 @@ public class LocationService {
         @Autowired
         private LocationMapper locationMapper;
 
-        /*public Location save( Location location){
-            return locationRepository.save(location);
-        }*/
+
         // Request -> Entity->save->response
         public LocationDto.LocationResponse save(LocationDto.LocationRequest request){
             Location location = locationMapper.fromLocationRequesttoLocation(request);

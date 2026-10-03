@@ -14,6 +14,7 @@ target/
 
 # Ignorer le dossier de configuration local
 config-repo/
+.env
 
 ### Eclipse ###
 .apt_generated

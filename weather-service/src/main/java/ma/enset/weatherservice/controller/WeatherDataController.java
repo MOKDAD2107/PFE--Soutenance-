@@ -1,5 +1,6 @@
 package ma.enset.weatherservice.controller;
 
+import ma.enset.weatherservice.dtos.LatestWeatherDto;
 import ma.enset.weatherservice.dtos.WeatherDataDto;
 import ma.enset.weatherservice.entities.WeatherData;
 import ma.enset.weatherservice.service.WeatherDataService;
@@ -30,5 +31,14 @@ public class WeatherDataController {
     @GetMapping("/weather/location/{locationId}")
     public ResponseEntity<List<WeatherDataDto.WeatherDataResponse>> findByLocationId(@PathVariable Long locationId){
         return ResponseEntity.ok(weatherDataService.findByLocationId(locationId));
+    }
+    @GetMapping("/weather/search/{cityName}")
+    public ResponseEntity<WeatherDataDto.WeatherDataResponse> findByCityName(@PathVariable String cityName){
+        return ResponseEntity.ok(weatherDataService.findByCityName(cityName));
+    }
+
+    @GetMapping("/latest")
+    public List<LatestWeatherDto> getLatestWeather() {
+        return weatherDataService.findLatestWeatherForAllCities();
     }
 }

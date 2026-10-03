@@ -1,0 +1,99 @@
+<div class="page">
+
+  <div class="section-title">
+    🗺 Carte météo — Maroc
+    @if (summary) { <span class="count">généré à {{ summary.generatedAt | date:'HH:mm' }}</span> }
+  </div>
+
+  @if (loading) {
+    <div class="loading">Chargement des données...</div>
+  }
+
+  @if (summary){
+
+
+
+      <!-- ── Tuiles stats globales ── -->
+      <div class="tiles">
+        <div class="tile">
+          <div class="tile-val ochre">{{ summary.averageTemperature | number:'1.0-1' }}°</div>
+          <div class="tile-label">Temp. moyenne</div>
+        </div>
+        <div class="tile">
+          <div class="tile-val blue">{{ summary.averageAirQuality | number:'1.0-0' }}</div>
+          <div class="tile-label">Qualité air moy.</div>
+        </div>
+        <div class="tile">
+          <div class="tile-val red">{{ summary.totalActiveAlerts }}</div>
+          <div class="tile-label">Alertes actives</div>
+        </div>
+        <div class="tile">
+          <div class="tile-val green">{{ summary.totalActiveSensors }}</div>
+          <div class="tile-label">Capteurs actifs</div>
+        </div>
+        <div class="tile">
+          <div class="tile-val ochre">{{ summary.totalCriticalWaterResources }}</div>
+          <div class="tile-label">Ressources critiques</div>
+        </div>
+      </div>
+  }
+
+      <div class="map-layout">
+        <!-- ── Sidebar ── -->
+        <div class="map-sidebar">
+
+          <div class="map-sidebar-block">
+            <div class="map-sidebar-title">Calques</div>
+            <div class="layer-toggle" [class.off]="!showMeteoLayer" (click)="toggleMeteoLayer()">
+              <span class="layer-dot meteo"></span> Villes (météo)
+              <span class="layer-check"></span>
+            </div>
+            <div class="layer-toggle" [class.off]="!showAlertsLayer" (click)="toggleAlertsLayer()">
+              <span class="layer-dot alertes"></span> Alertes actives
+              <span class="layer-check"></span>
+            </div>
+          </div>
+
+          <div class="map-sidebar-block">
+            <div class="map-sidebar-title">Rechercher</div>
+            <input
+              class="map-search"
+              placeholder="Ville…"
+              [value]="searchText"
+              (input)="onSearchChange($any($event.target).value)"
+              (keyup.enter)="onSearchEnter()"
+            />
+          </div>
+
+          <div class="map-sidebar-block">
+            <div class="map-sidebar-title">Villes</div>
+            @for (city of filteredCities; track city.locationId) {
+              <div
+                class="map-city-item"
+                [class.active]="selectedCity?.locationId === city.locationId"
+                (click)="flyToCity(city)"
+              >
+                <span>{{ city.city }}</span>
+                <span class="t">{{ city.temperature | number:'1.0-0' }}°C</span>
+              </div>
+            }
+            @if (filteredCities.length === 0) {
+              <div class="no-result">Aucune ville trouvée</div>
+            }
+          </div>
+        </div>
+
+
+        <!-- ── Carte ── -->
+        <div class="map-main">
+          <div id="leaflet-map"></div>
+          <div class="map-legend">
+            <div class="map-legend-row"><span class="map-legend-dot" style="background:var(--green)"></span> Normal</div>
+            <div class="map-legend-row"><span class="map-legend-dot" style="background:var(--ochre)"></span> Attention (chaleur)</div>
+            <div class="map-legend-row"><span class="map-legend-dot" style="background:var(--red)"></span> Alerte active</div>
+          </div>
+        </div>
+      </div>
+
+
+</div>

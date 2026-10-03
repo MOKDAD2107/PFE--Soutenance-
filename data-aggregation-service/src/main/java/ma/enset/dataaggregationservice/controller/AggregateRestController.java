@@ -28,7 +28,7 @@ public class AggregateRestController {
     }
 
     @GetMapping("/waterstatus")
-    public ResponseEntity<WaterStatusResponse> getWaterStatus(){
-        return ResponseEntity.ok(aggregateService.statusResponse());
+    public ResponseEntity<WaterStatusResponse> getWaterStatus(@PathVariable(required = false) Long cityLocationId){
+        return ResponseEntity.ok(aggregateService.statusResponse(cityLocationId));
     }
 }

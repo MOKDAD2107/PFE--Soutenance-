@@ -1,0 +1,26 @@
+:root {
+  --bg: #F3ECDD;
+  --bs-body-bg: var(--bg);
+  --green: #1F4D3D;
+  --green-bg: #E4EEE7;
+  --ochre: #B5701E;
+  --ochre-bg: #F6E7CE;
+  --red: #A3372B;
+  --red-bg: #F5E1DB;
+  --line: #E2D7BE;
+  --panel: #FFFDF7;
+  --text: #2C2416;
+  --text-dim: #7A6F58;
+  --blue:#2C5F7C;
+  --text-faint:#A69B80
+}
+
+body {
+  background: var(--bg, #F3ECDD) !important;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+html {
+  background: var(--bg, #F3ECDD) !important;
+}

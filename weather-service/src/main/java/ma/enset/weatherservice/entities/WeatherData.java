@@ -18,6 +18,7 @@ public class WeatherData {
     private Double pressure;
     private Double uvIndex;
     private String description;
+    private String weatherIcon;
     @Enumerated(EnumType.STRING)
     private ApiSource apiSource;
     @ManyToOne

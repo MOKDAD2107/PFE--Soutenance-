@@ -1,0 +1,308 @@
+
+<div class="container-fluid py-4 px-4">
+
+  <!-- ── En-tête ───────────────────────────────────────── -->
+  <div class="db-header">
+    <div>
+      <h2 class="db-title">Tableau de bord</h2>
+      <p class="db-subtitle">Surveillance météo et environnementale — Maroc</p>
+    </div>
+
+    <!-- Barre de recherche ville -->
+    <div class="db-search-row">
+      <!--<label class="db-search-label"> Ville :</label>-->
+
+      <div class="db-search-wrap">
+        <input
+          type="text"
+          class="db-search-input"
+          placeholder="Rechercher une ville..."
+          [value]="searchQuery"
+          (input)="onSearch($any($event.target).value)"
+          (keydown)="onSearchKeydown($event)"
+          (blur)="closeDropDown()"
+          (focus)="onSearch(searchQuery)"
+        />
+
+        <!-- Dropdown des résultats -->
+        @if (showDropDown) {
+          <div class="db-dropdown " (mousedown)="$event.preventDefault()">
+            @for (city of filteredCities; track city.id;let i=$index) {
+              <button class="db-dropdown-item" [class.highlighted]="i === highlightedIndex" (click)="selectCityFromSearch(city)">
+                {{ city.name }}
+              </button>
+            }
+            @if (filteredCities.length === 0) {
+              <div class="db-dropdown-empty">Aucune ville trouvée</div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Bouton Rechercher -->
+      <button
+        class="db-search-btn"
+        (click)="searchAndLoad()"
+        [disabled]="searchLoading || !searchQuery.trim()"
+      >
+        @if (searchLoading) {
+          <span class="db-spinner"></span>
+        }
+        Rechercher
+      </button>
+
+      <!-- Ville sélectionnée actuelle -->
+      @if (dashboard && !loading) {
+        <span class="db-badge db-badge-active"> {{ dashboard.cityName }}</span>
+      } @else if (loading) {
+        <span class="db-badge db-badge-loading">⏳ Chargement...</span>
+      }
+
+      <!-- Message d'erreur -->
+      @if (searchError) {
+        <span class="db-search-error">⚠ {{ searchError }}</span>
+      }
+    </div>
+  </div>
+
+
+  <!-- Sélecteur de ville -->
+  <!--
+  <div class="d-flex align-items-center gap-2">
+    <label class="text-muted small">Ville :</label>
+    <select class="form-select form-select-sm"
+            style="width: 160px;"
+            [ngModel]="selectedLocationId"
+            (ngModelChange)="onCityChange($event)">
+      @for (city of cities; track city.id) {
+        <option [value]="city.id">
+          {{ city.name }}
+        </option>
+      }
+    </select>
+  </div>
+</div>
+-->
+
+  <!-- ── Spinner ───────────────────────────────────────── -->
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-success" role="status"></div>
+      <p class="mt-2 text-muted">Chargement des données...</p>
+    </div>
+  }
+
+  <!-- ── Contenu principal ─────────────────────────────── -->
+  @if (!loading && dashboard) {
+
+    <!-- ── Hero (photo de ville + météo actuelle) ───────── -->
+    <div class="hero" [class.has-photo]="cityPhotoUrl">
+      <div class="hero-bg"
+           [class.has-photo]="cityPhotoUrl"
+           [style.background-image]="cityPhotoUrl ? 'url(' + cityPhotoUrl + ')' : null"
+           [style.background-position]="cityPosition"></div>
+      <div class="hero-overlay"></div>
+      @if (!cityPhotoUrl) {
+        <div class="hero-pattern"></div>
+      }
+      <div class="hero-content">
+        <div class="hero-left">
+          <div class="hero-city">{{ dashboard.cityName }}, {{ dashboard.country }}</div>
+          <div class="hero-temp">
+            <span class="hero-temp-num">{{ dashboard.weatherData?.temperature | number:'1.0-0' }}</span><span class="hero-temp-unit">°C</span>
+          </div>
+          <div class="hero-desc text-capitalize">
+            {{ dashboard.weatherData?.description }}
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="hs">
+            <span class="hs-val">{{ dashboard.weatherData?.humidity }}%</span>
+            <span class="hs-label">Humidité</span>
+          </div>
+          <div class="hs">
+            <span class="hs-val">{{ dashboard.weatherData?.windSpeed }} m/s</span>
+            <span class="hs-label">Vent</span>
+          </div>
+          <div class="hs">
+            <span class="hs-val">{{ dashboard.weatherData?.pressure }} hPa</span>
+            <span class="hs-label">Pression</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Tuiles résumé global (Atlas et Sable) ──────────── -->
+    @if (summary) {
+      <div class="atlas-tiles mb-4">
+        <div class="atlas-tile">
+          <div class="atlas-tile-val green">{{ summary.cities.length }}</div>
+          <div class="atlas-tile-label">Villes surveillées</div>
+        </div>
+        <div class="atlas-tile">
+          <div class="atlas-tile-val ochre">{{ summary.averageTemperature | number:'1.0-1' }}°C</div>
+          <div class="atlas-tile-label">Température moyenne</div>
+        </div>
+        <div class="atlas-tile">
+          <div class="atlas-tile-val" [ngClass]=" colorIQAClass(summary.averageAirQuality)">
+            {{ summary.averageAirQuality | number:'1.0-1' }}
+          </div>
+          <div class="atlas-tile-label">IQA moyen</div>
+        </div>
+        <div class="atlas-tile">
+          <div class="atlas-tile-val" [ngClass]="colorPoussiereClass(summary.averageDust)">
+            {{ summary.averageDust | number:'1.0-1' }} <small style="font-size:11px">µg/m³</small>
+          </div>
+          <div class="atlas-tile-label">Poussières PM2.5</div>
+        </div>
+        <div class="atlas-tile">
+          <div class="atlas-tile-val green">{{ summary.totalActiveSensors }}</div>
+          <div class="atlas-tile-label">Capteurs actifs</div>
+        </div>
+        <div class="atlas-tile">
+          <div class="atlas-tile-val"
+               [class.red]="summary.totalActiveAlerts > 0"
+               [class.green]="summary.totalActiveAlerts === 0">
+            {{ summary.totalActiveAlerts }}
+          </div>
+          <div class="atlas-tile-label">Alertes actives</div>
+        </div>
+        <div class="atlas-tile">
+          <div class="atlas-tile-val"
+               [class.red]="summary.totalCriticalWaterResources > 0"
+               [class.green]="summary.totalCriticalWaterResources === 0">
+            {{ summary.totalCriticalWaterResources }}
+          </div>
+          <div class="atlas-tile-label">Ressources eau critiques</div>
+        </div>
+      </div>
+    }
+
+    <!-- Alertes actives -->
+    @if (dashboard.alerts.length>0){
+    <div class="mb-5">
+    @for (alert of dashboard.alerts; track alert.id) {
+      <div class="atlas-alert">
+        <div class="atlas-alert-icon">⚠</div>
+        <div class="atlas-alert-body">
+
+          <strong>{{ alert.alertType }}</strong>
+          <span>{{ alert.message }}</span>
+        </div>
+      </div>
+    }
+    </div>
+  }
+
+    <!-- ── Ligne 1 : Capteurs IoT + Mini-carte de localisation ── -->
+
+    <div class="section-title"><span> Capteurs & localisation</span></div>
+    <div class="row g-3 mb-4">
+      <!-- Capteurs IoT — métriques rapides -->
+      <div class="col-md-6">
+        <div class="sensors-card h-100">
+          <div class="sensor-title">
+            Capteurs IoT — <span class="sensors-title-city">{{ dashboard.cityName }}</span>
+          </div>
+          <div class="sensors-grid">
+          @for (r of dashboard.reading; track r.sensorId) {
+            <div class="sc">
+              <div class="sc-name">{{ getSensorName(r.sensorId) }}</div>
+              <div class="sc-val" [ngClass]="getStatusBadge(r.status)" >
+                {{ r.valeur | number:'1.1-1' }} <span class="sc-unit">{{ r.unite }}</span>
+              </div>
+              <span class="sc-badge" [ngClass]="getStatusBadge(r.status)">{{ r.status }}</span>
+            </div>
+          }
+
+          <!-- Message si aucune lecture -->
+          @if (dashboard.reading.length === 0) {
+            <div class="sc">
+              <div class="sc-name text-muted">Aucune lecture de capteur disponible</div>
+            </div>
+          }
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini-carte de localisation -->
+      <div class="col-md-6">
+        <div class="map-card h-100">
+          <div class="map-card-title">
+            Localisation <span>— {{ dashboard.cityName }}</span>
+          </div>
+          <div id="minimap"></div>
+          <div class="map-overlay-badge">
+            {{ formatCoords(dashboard.latitude, dashboard.longitude) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ── Prévisions 5 jours ─────────────────────────── -->
+    <div class="section-title mb-3"><span> Prévisions des 5 jours</span></div>
+    <div class="forecast-strip">
+    <!--<div class="d-flex gap-3 mb-5 flex-wrap">-->
+      @for (f of dashboard.forecastData.slice(0, 5); track f.date; let i = $index)  {
+        <div class="forecast-card" [class.is-today]="i === 0">
+          <div class="forecast-day">{{ f.date | date:'EEE':'':'fr' }}</div>
+          <span class="wicon" [ngClass]="getWeatherIcon(f.description)"></span>
+          <div class="forecast-temp">{{ f.predictedTemp | number:'1.0-0' }}°C</div>
+          @if (f.precipitationProbability > 0) {
+            <div class="forecast-precip is-rain">💧 {{ f.precipitationProbability | number:'1.0-0' }}%</div>
+          } @else {
+            <div class="forecast-precip">0%</div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- ── Résumé des villes ──────────────────────────── -->
+    <div class="cities-grid-header">
+      <div class="section-title mb-0"><span> Toutes les villes</span></div>
+      <input
+        type="text"
+        class="db-search-input city-grid-filter"
+        placeholder="Filtrer les villes..."
+        [(ngModel)]="cityGridFilter"
+      />
+    </div>
+    @if (summary) {
+      <div class="row g-3 mb-3">
+        @for (city of getFilteredGridCities(); track city.locationId) {
+          <div class="col-4 col-md-4 col-lg-2">
+            <div class="city-card h-100"
+                 [class.is-active]="city.locationId === selectedLocationId"
+                 (click)="selectCity(city.locationId)">
+              <div class="city-card-name">{{ city.city }}</div>
+              <div class="city-card-temp-row">
+                <span class="wicon wicon-sm" [ngClass]="getWeatherIcon(city.weatherDescription)"></span>
+                <span class="city-card-temp">{{ city.temperature | number:'1.0-0' }}°C</span>
+              </div>
+              <div class="city-card-desc text-capitalize">{{ city.weatherDescription }}</div>
+              <div class="city-card-badges">
+                <span class="cc-badge">📡 {{ city.activeSensorsCount }}</span>
+                @if (city.activeAlertCount > 0) {
+                  <span class="cc-badge cc-badge-alert">⚠ {{ city.activeAlertCount }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+        @if (getFilteredCityCount() === 0) {
+          <div class="text-muted small">Aucune ville ne correspond à « {{ cityGridFilter }} ».</div>
+        }
+      </div>
+
+      @if (getFilteredCityCount() > citiesGridPageSize) {
+        <div class="text-center mb-4">
+          <button class="btn-show-more" (click)="toggleShowAllCities()">
+            {{ showAllCitiesGrid ? 'Réduire ▲' : 'Voir toutes les villes (' + getFilteredCityCount() + ') ▼' }}
+          </button>
+        </div>
+      }
+    }
+  }
+</div>

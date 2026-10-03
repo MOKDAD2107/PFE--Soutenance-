@@ -32,6 +32,7 @@ public class GatewayServiceApplication {
     //http://localhost:8888/WEATHER-SERVICE/api/locations/**
     @Bean
     DiscoveryClientRouteDefinitionLocator dynamicRouting(ReactiveDiscoveryClient reactive, DiscoveryLocatorProperties properties) {
+        properties.setIncludeExpression("true");
         return new DiscoveryClientRouteDefinitionLocator(reactive, properties);
     }
 }

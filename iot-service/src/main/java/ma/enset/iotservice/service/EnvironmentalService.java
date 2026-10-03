@@ -1,5 +1,7 @@
 package ma.enset.iotservice.service;
 
+import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import ma.enset.iotservice.dtos.EnvironmentalAlertDto;
 
 import ma.enset.iotservice.entities.EnvironmentalAlert;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 @Service
+@Slf4j
 public class EnvironmentalService {
     @Autowired
     private EnvironmentalAlertRepository environmentalAlertRepository;
@@ -28,12 +31,13 @@ public class EnvironmentalService {
                 .toList();
         return responses;
     }
-    public List<EnvironmentalAlertDto> findByLocationId(Long locationId){
-        List<EnvironmentalAlert> sensors=environmentalAlertRepository.findByLocationId(locationId);
-        List<EnvironmentalAlertDto> responses=sensors.stream()
-                .map(en->environmentalAlertMapper.fromAlertToAlertResponse(en))
+    public List<EnvironmentalAlertDto> findByLocationId(Long locationId, int limit){
+        return environmentalAlertRepository
+                .findByLocationIdAndAlertStatusOrderByTriggerAtDesc(locationId, AlertStatus.ACTIVE)
+                .stream()
+                .limit(limit)
+                .map(en -> environmentalAlertMapper.fromAlertToAlertResponse(en))
                 .toList();
-        return responses;
     }
     public List<EnvironmentalAlertDto> findByAlertStatus(AlertStatus alertStatus){
         List<EnvironmentalAlert> sensors=environmentalAlertRepository.findByAlertStatus(alertStatus);
@@ -50,17 +54,46 @@ public class EnvironmentalService {
         return responses;
     }
 
+
     public boolean existActiveAlertForSensor(Long sensorId){
         return environmentalAlertRepository.existsBySensorIdAndAlertStatus(sensorId, AlertStatus.ACTIVE);
     }
-    public boolean existsLocationIdAlertTyeStatus(Long locationId,String alertType){
-        return environmentalAlertRepository.existsByLocationIdAndAlertTypeAndAlertStatus(locationId,alertType,AlertStatus.ACTIVE);
+
+    public void resolveObsoleteAlertsForSensor(Long sensorId, String currentAlertType) {
+        List<EnvironmentalAlert> actives = environmentalAlertRepository
+                .findBySensorIdAndAlertStatus(sensorId, AlertStatus.ACTIVE);
+        actives.stream()
+                .filter(a -> !a.getAlertType().equals(currentAlertType))
+                .forEach(a -> {
+                    a.setAlertStatus(AlertStatus.RESOLVED);
+                    a.setResolvedAt(LocalDateTime.now());
+                    environmentalAlertRepository.save(a);
+                    log.info("Alerte résolue automatiquement : {}", a.getMessage());
+                });
+    }
+    public boolean existsBySensorIdAndAlertTypeAndStatus(Long sensorId, String alertType) {
+        return environmentalAlertRepository
+                .existsBySensorIdAndAlertTypeAndAlertStatus(sensorId, alertType, AlertStatus.ACTIVE);
     }
 
-    public EnvironmentalAlertDto resolve(Long id){
-        EnvironmentalAlert alert=environmentalAlertRepository.findById(id).orElseThrow(()->new RessourceNotFoundException("Alerte non trouve"+id));
+    @Transactional
+    public EnvironmentalAlertDto resolve(Long id,String note){
+        EnvironmentalAlert alert=environmentalAlertRepository.findById(id).
+                orElseThrow(()->new RessourceNotFoundException("Alerte non trouve"+id));
         alert.setAlertStatus(AlertStatus.RESOLVED);
         alert.setResolvedAt(LocalDateTime.now());
+        alert.setResolutionNote(note);
+        environmentalAlertRepository.save(alert);
+        return environmentalAlertMapper.fromAlertToAlertResponse(alert);
+    }
+    @Transactional
+    public EnvironmentalAlertDto ignore(Long id, String note){
+        EnvironmentalAlert alert = environmentalAlertRepository.findById(id)
+                .orElseThrow(() -> new RessourceNotFoundException("Alerte non trouvee " + id));
+        alert.setAlertStatus(AlertStatus.IGNORED);
+        alert.setResolvedAt(LocalDateTime.now());
+        alert.setResolutionNote(note);
+        environmentalAlertRepository.save(alert);
         return environmentalAlertMapper.fromAlertToAlertResponse(alert);
     }
 

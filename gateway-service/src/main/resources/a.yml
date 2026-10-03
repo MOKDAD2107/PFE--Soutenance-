@@ -1,6 +1,10 @@
 spring:
   cloud:
     gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+      globalcors:
+        add-to-simple-url-handler-mapping: true
       discovery:
         server:
           webflux:
@@ -18,4 +22,9 @@ spring:
         - id: data-route
           uri: lb://DATA-AGGREGATION-SERVICE
           predicates:
-              - Path=/api/aggregate/**
+            - Path=/api/aggregate/**
+
+        - id: ai-route
+          uri: lb://AI-AGENT-SERVICE
+          predicates:
+            - Path=/api/ai/**

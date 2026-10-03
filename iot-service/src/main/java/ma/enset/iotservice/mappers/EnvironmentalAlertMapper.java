@@ -16,9 +16,11 @@ public class EnvironmentalAlertMapper {
                 .severity(alert.getAlertSeverity())
                 .status(alert.getAlertStatus())
                 .location(alert.getLocation())
+                .locationId(alert.getLocationId())
                 .sensorId(alert.getSensorId())
                 .triggerValue(alert.getTriggerValue())
                 .seuilDepasse(alert.getSeuilDepasse())
+                .resolutionNote(alert.getResolutionNote())
                 .triggeredAt(alert.getTriggerAt())
                 .resolvedAt(alert.getResolvedAt())
                 .build();

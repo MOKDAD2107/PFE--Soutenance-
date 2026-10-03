@@ -21,6 +21,7 @@ public class EnvironmentalAlert {
     private Long sensorId; // capteur qui a declenche l'alerte
     private double triggerValue; //valeur qui a declenche l'alerte
     private double seuilDepasse; //seuil depasse
+    private String resolutionNote;
     private LocalDateTime triggerAt;
     private LocalDateTime resolvedAt;
     private Long locationId;

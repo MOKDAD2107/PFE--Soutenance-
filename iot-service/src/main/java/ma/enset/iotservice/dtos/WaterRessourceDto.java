@@ -33,13 +33,24 @@ public class WaterRessourceDto {
     public static class WaterRessourceResponse{
         private Long id;
         private String name;
+        private Long cityLocationId;
         private RessourceType ressourceType;
         private Double capaciteMax;
         private Double currentLevel;
         private Double fillPercentage;
         private String fillStatus;
+        private Double seuilBas;
+        private Double seuilCritique;
         private LocalDateTime lastUpdate;
         private Location location;
-
+    }
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class WaterRessourceSeuilRequest{
+        @NotNull(message = "Le seuil bas est obligatoire")
+        @Min(value = 0, message = "Le seuil ne peut pas être négatif")
+        private Double seuilBas;
+        @NotNull(message = "Le seuil critique est obligatoire")
+        @Min(value = 0, message = "Le seuil ne peut pas être négatif")
+        private Double seuilCritique;
     }
 }

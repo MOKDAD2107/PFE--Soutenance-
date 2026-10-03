@@ -16,6 +16,7 @@ public class WeatherDataResponse {
     private Double pressure;
     private Double uvIndex;
     private String description;
+    private String weatherIcon;
     private String sourceApi;
     private LocationSummary location;
 

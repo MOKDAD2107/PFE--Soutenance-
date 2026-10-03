@@ -1,0 +1,154 @@
+:host {
+  --bg:#F3ECDD; --panel:#FFFDF7; --line:#E2D7BE;
+  --text:#2C2416; --text-dim:#7A6F58; --text-faint:#A69B80;
+  --green:#1F4D3D; --green-bg:#E4EEE7;
+  --ochre:#B5701E; --ochre-bg:#F6E7CE;
+  --red:#A3372B; --red-bg:#F5E1DB;
+  --blue:#2C5F7C; --blue-bg:#E2EBF0;
+
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 26px 36px 60px;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px;
+  color: var(--text-faint);
+}
+
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.section-title .count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-faint); font-weight: 400; }
+
+/* ── Tuiles stats globales ── */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-bottom: 22px;
+}
+.tile { background: var(--panel); padding: 14px 12px; text-align: center; }
+.tile-val { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; }
+.tile-val.green { color: var(--green); }
+.tile-val.ochre { color: var(--ochre); }
+.tile-val.red { color: var(--red); }
+.tile-val.blue { color: var(--blue); }
+.tile-label { font-size: 10px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: .03em; }
+
+/* ── Layout carte ── */
+.map-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+}
+
+.map-sidebar {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  height: fit-content;
+}
+.map-sidebar-block { padding: 16px; border-bottom: 1px solid var(--line); }
+.map-sidebar-block:last-child { border-bottom: none; }
+.map-sidebar-title {
+  font-family: 'Fraunces', serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--text-dim);
+}
+
+.layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 0;
+  cursor: pointer;
+  font-size: 12.5px;
+  user-select: none;
+}
+.layer-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.layer-dot.meteo { background: var(--blue); }
+.layer-dot.alertes { background: var(--red); }
+.layer-check {
+  width: 15px; height: 15px; border: 1.5px solid var(--line); flex-shrink: 0; margin-left: auto;
+  display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--green);
+}
+.layer-toggle:not(.off) .layer-check::after { content: "✓"; }
+.layer-toggle.off { opacity: .45; }
+
+.map-search {
+  width: 100%;
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  padding: 8px 10px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  background: var(--panel);
+  color: var(--text);
+}
+.map-search:focus { border-color: var(--green); }
+
+.map-city-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 4px;
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 1px dashed var(--line);
+}
+.map-city-item:last-child { border-bottom: none; }
+.map-city-item:hover, .map-city-item.active { color: var(--green); }
+.map-city-item .t { font-family: 'IBM Plex Mono', monospace; color: var(--text-dim); }
+
+.no-result { font-size: 11.5px; color: var(--text-faint); padding: 8px 4px; }
+
+.map-main {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+
+#leaflet-map { height: 620px; width: 100%; }
+
+.map-legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 500;
+  background: rgba(255, 253, 247, .95);
+  border: 1px solid var(--line);
+  padding: 10px 14px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.map-legend-row { display: flex; align-items: center; gap: 7px; margin-top: 4px; }
+.map-legend-row:first-child { margin-top: 0; }
+.map-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .map-layout { grid-template-columns: 1fr; }
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+}

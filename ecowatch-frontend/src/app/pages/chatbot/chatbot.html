@@ -1,0 +1,68 @@
+<!-- Bouton flottant -->
+@if (!isOpen) {
+  <button class="chat-fab" (click)="isOpen = true">
+    🍀
+    <span class="chat-fab-label">EcoWatch AI</span>
+  </button>
+}
+
+<!-- Fenêtre chat -->
+@if (isOpen) {
+  <div class="chat-window">
+    <!-- Header -->
+    <div class="chat-header">
+      <div class="chat-header-info">
+        <div class="chat-avatar">🍀</div>
+        <div>
+          <div class="chat-name">EcoWatch AI</div>
+          <div class="chat-status">● En ligne</div>
+        </div>
+      </div>
+      <button class="chat-close" (click)="isOpen = false">✕</button>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" #scrollArea>
+      @for (msg of message; track $index) {
+        <div class="msg" [ngClass]="msg.role === 'user' ? 'msg-user' : 'msg-ai'">
+          @if (msg.role === 'assistant') {
+            <div class="msg-avatar">🍀</div>
+          }
+          <div class="msg-bubble">{{ msg.content }}</div>
+        </div>
+      }
+      @if (loading) {
+        <div class="msg msg-ai">
+          <div class="msg-avatar">🍀</div>
+          <div class="msg-bubble typing">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Suggestions rapides -->
+    @if (message.length === 1) {
+      <div class="chat-suggestions">
+        @for (s of suggestions; track s) {
+          <button class="suggestion-btn" (click)="sendSuggestion(s)">{{ s }}</button>
+        }
+      </div>
+    }
+
+    <!-- Input -->
+    <div class="chat-input-row">
+      <input
+        type="text"
+        class="chat-input"
+        placeholder="Posez votre question..."
+        [(ngModel)]="input"
+        (keyup.enter)="send()"
+        [disabled]="loading"
+      />
+      <button class="chat-send" (click)="send()" [disabled]="loading ||input.trim()">
+        ➤
+      </button>
+    </div>
+  </div>
+}

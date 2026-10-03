@@ -27,9 +27,12 @@ public class WaterRessource {
         private RessourceType ressourceType;
         private String fillStatus;
         private Long locationId;
+        private Long cityLocationId;
         @Transient
         private Location location;
         private LocalDateTime lastUpdate;
+        private Double seuilBas;
+        private Double seuilCritique;
 
         @PrePersist @PreUpdate
         protected void computeField() {
@@ -71,9 +74,11 @@ public class WaterRessource {
                 }
             fillStatus=computeFillStatus(fillPercentage);
         }
-        private String computeFillStatus(double pct){
-            if(pct<20) return "CRITIQUE";
-            if(pct<40) return "BAS";
+        public String computeFillStatus(double pct){
+            double critique = (seuilCritique!=null)?seuilCritique:20.0;
+            double bas= (seuilBas != null)?seuilBas : 40.0;
+            if(pct<critique) return "CRITIQUE";
+            if(pct<bas) return "BAS";
             if(pct<70) return "NORMAL";
             return "ELEVE";
         }

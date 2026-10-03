@@ -14,6 +14,8 @@ public class WaterRessourceMapper {
                 .ressourceType(request.getRessourceType())
                 .capaciteMax(request.getCapaciteMax())
                 .currentLevel(request.getCurrentLevel())
+                .locationId(request.getLocationId())
+                .cityLocationId(request.getLocationId())
                 .location(location)
                 .build();
     }
@@ -22,11 +24,14 @@ public class WaterRessourceMapper {
         return WaterRessourceDto.WaterRessourceResponse.builder()
                 .id(waterRessource.getId())
                 .name(waterRessource.getName())
+                .cityLocationId(waterRessource.getCityLocationId())
                 .ressourceType(waterRessource.getRessourceType())
                 .capaciteMax(waterRessource.getCapaciteMax())
                 .currentLevel(waterRessource.getCurrentLevel())
                 .fillPercentage(waterRessource.getFillPercentage())
                 .fillStatus(waterRessource.getFillStatus())
+                .seuilBas(waterRessource.getSeuilBas())
+                .seuilCritique(waterRessource.getSeuilCritique())
                 .location(waterRessource.getLocation())
                 .lastUpdate(waterRessource.getLastUpdate())
                 .build();

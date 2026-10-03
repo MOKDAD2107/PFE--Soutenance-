@@ -9,10 +9,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface EnvironmentalAlertRepository extends JpaRepository<EnvironmentalAlert,Long> {
-    List<EnvironmentalAlert> findByLocationId(Long locationId);
     List<EnvironmentalAlert> findByAlertSeverity(AlertSeverity alertSeverity);
     List<EnvironmentalAlert> findByAlertStatus(AlertStatus alertStatus);
+    List<EnvironmentalAlert> findBySensorIdAndAlertStatus(Long sensorId, AlertStatus alertStatus);
 
     boolean existsBySensorIdAndAlertStatus(Long sensorId, AlertStatus alertStatus);
     boolean existsByLocationIdAndAlertTypeAndAlertStatus(Long locationId,String alertType,AlertStatus alertStatus);
+    boolean existsBySensorIdAndAlertTypeAndAlertStatus(Long sensorId,String alertType,AlertStatus alertStatus);
+    List<EnvironmentalAlert> findByLocationIdAndAlertStatusOrderByTriggerAtDesc(Long locationId, AlertStatus alertStatus);
 }
