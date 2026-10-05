@@ -256,8 +256,6 @@ git clone -b dev https://github.com/MOKDAD2107/PFE--Soutenance-.git
 cd PFE--Soutenance-
 ```
 
-> Remplacez l'URL par celle de votre dépôt GitHub si le nom du repository est différent.
-
 ---
 
 # 🔐 Configuration des variables d'environnement
