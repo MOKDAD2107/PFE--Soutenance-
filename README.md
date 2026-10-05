@@ -109,7 +109,7 @@ EcoWatch est basé sur une architecture distribuée composée de plusieurs micro
               │                     │                     │
               ▼                     ▼                     ▼
      ┌────────────────┐   ┌────────────────┐   ┌────────────────────┐
-     │ Weather Service │   │  IoT Service   │   │ AI Agent Service   │
+     │ Weather Service│   │   IoT Service  │   │  AI Agent Service  │ 
      └───────┬────────┘   └───────┬────────┘   └─────────┬──────────┘
              │                    │                      │
              ▼                    ▼                      ▼
@@ -123,24 +123,24 @@ EcoWatch est basé sur une architecture distribuée composée de plusieurs micro
                          │      BFF        │
                          └─────────────────┘
 
-              ┌─────────────────────────────────┐
-              │       Infrastructure            │
-              │                                 │
-              │ Eureka │ Config Server │ Docker │
-              └─────────────────────────────────┘
+              ┌─────────────────────────────────────────────┐
+              │            Infrastructure                   │
+              │                                             │
+              │ Discovery Service │ Config Service │ Docker │
+              └─────────────────────────────────────────────┘
 ```
 
 ### 🧩 Microservices
 
 | Service                      | Responsabilité                                          |
-| ---------------------------- | ------------------------------------------------------- |
+|------------------------------| ------------------------------------------------------- |
 | **API Gateway**              | Point d'entrée de l'application et routage des requêtes |
 | **Weather Service**          | Données météorologiques et prévisions                   |
 | **IoT Service**              | Capteurs simulés, mesures, ressources en eau et alertes |
 | **Data Aggregation Service** | Agrégation des données Weather et IoT                   |
 | **AI Agent Service**         | Assistant conversationnel basé sur l'IA                 |
-| **Config Server**            | Centralisation de la configuration                      |
-| **Eureka Server**            | Découverte des services                                 |
+| **Config Service**           | Centralisation de la configuration                      |
+| **Discovery Service**        | Découverte des services                                 |
 | **Keycloak**                 | Authentification et autorisation                        |
 
 Le **Data Aggregation Service** fonctionne comme un **Backend for Frontend (BFF)**. Il ne possède pas sa propre base de données et récupère les informations nécessaires auprès des services Weather et IoT.
@@ -252,8 +252,8 @@ Avant de lancer le projet, installer :
 ## 2. Cloner le projet
 
 ```bash
-git clone https://github.com/MOKDAD2107/EcoWatch.git
-cd EcoWatch
+git clone -b dev https://github.com/MOKDAD2107/PFE--Soutenance-.git
+cd PFE--Soutenance-
 ```
 
 > Remplacez l'URL par celle de votre dépôt GitHub si le nom du repository est différent.
@@ -264,7 +264,7 @@ cd EcoWatch
 
 Les clés API et informations sensibles ne sont pas stockées dans Git.
 
-Créer un fichier `.env` à partir du fichier `.env.example`.
+Créer un fichier `.env`
 
 Exemple :
 
@@ -274,6 +274,9 @@ GROQ_API_KEY=your_groq_api_key
 POSTGRES_USERNAME=postgres
 POSTGRES_PASSWORD=your_postgresql_password
 ```
+> Spring Boot ne lit pas automatiquement le fichier .env. Dans IntelliJ:
+>
+> ouvrir Run > Edit Configurations, choisir le service, puis Modify options > Environment variables et y recopier les variables (séparées par ;). Variables nécessaires : OPENWEATHER_API_KEY (weather-service), GROQ_API_KEY (ai-agent-service) et le mot de passe PostgreSQL.
 
 # 🌦️ Configuration OpenWeatherMap
 
@@ -488,9 +491,9 @@ EcoWatch/
 │   ├── DATA-AGGREGATION-SERVICE.properties
 │   └── AI-AGENT-SERVICE.properties
 │
-├── config-server/
+├── config-service/
 │
-├── eureka-server/
+├── discovery-service/
 │
 ├── gateway-service/
 │
