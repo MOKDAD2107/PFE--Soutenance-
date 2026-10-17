@@ -16,6 +16,10 @@ target/
 config-repo/
 .env
 .idea
+backup/
+target/
+node_modules/
+docker/keycloak/ecowatch-realm.json
 
 ### Eclipse ###
 .apt_generated

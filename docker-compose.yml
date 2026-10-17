@@ -1,0 +1,160 @@
+services:
+  eureka:
+    build: ./discovery-service
+    container_name: eureka
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+  config-service:
+    build: ./config-service
+    container_name: config-service
+    ports:
+      - "9999:9999"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      MANAGEMENT_HEALTH_CONFIG_ENABLED: "false"
+    depends_on:
+      eureka:
+        condition: service_healthy
+    healthcheck:
+        test: [ "CMD", "wget", "-qO-", "http://localhost:9999/actuator/health" ]
+        interval: 5s
+        timeout: 3s
+        retries: 20
+        start_period: 30s
+
+
+  postgres:
+    image: postgres:15
+    container_name: ecowatch_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ecowatch-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  weather-service:
+    build: ./weather-service
+    container_name: weather-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: configserver:http://config-service:9999
+      OPENWEATHERMAP_API_KEY: ${OPENWEATHER_API_KEY}
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+          condition: service_healthy
+      eureka:
+          condition: service_healthy
+      config-service:
+        condition: service_healthy
+    restart: on-failure
+
+  iot-service:
+    build: ./iot-service
+    container_name: iot-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: configserver:http://config-service:9999
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    restart: on-failure
+
+  data-aggregation-service:
+    build: ./data-aggregation-service
+    container_name: data-aggregation-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: configserver:http://config-service:9999
+    depends_on:
+      eureka:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    restart: on-failure
+
+  ai-agent-service:
+    build: ./ai-agent-service
+    container_name: ai-agent-service
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: configserver:http://config-service:9999
+      SPRING_AI_OPENAI_API_KEY: ${GROQ_API_KEY}
+    depends_on:
+      eureka:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    restart: on-failure
+
+  gateway-service:
+    build: ./gateway-service
+    container_name: gateway-service
+    ports:
+      - "8888:8888"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+    depends_on:
+      eureka:
+        condition: service_healthy
+    restart: on-failure
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.3
+    container_name: keycloak
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: http://localhost:8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./docker/keycloak:/opt/keycloak/data/import
+
+  frontend:
+    build: ./ecowatch-frontend
+    container_name: ecowatch-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - gateway-service
+
+volumes:
+  ecowatch-pgdata:
+  keycloak-data:

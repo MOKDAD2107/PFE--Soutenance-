@@ -25,7 +25,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   private map: L.Map | null = null;
   private mapReady = false;
 
-  private meteoClusterGroup: any = (L as any).markerClusterGroup({
+  private meteoClusterGroup: any = (window as any).L.markerClusterGroup({
     maxClusterRadius: 50,
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
