@@ -30,7 +30,7 @@ jobs:
           java-version: 21
           cache: maven
       - name: Build
-        run:
+        run: |
           sed -i 's/\r$//' mvnw
           chmod +x mvnw
           ./mvnw -B -q package -DskipTests
