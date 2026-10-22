@@ -223,7 +223,10 @@ Les bases de données sont développées avec **PostgreSQL** et exploitées avec
 
 ## Dev / Infrastructure
 
-* Docker
+* Docker et Docker Compose
+* nginx (service du frontend)
+* GitHub Actions (CI/CD)
+* GitHub Container Registry (GHCR)
 * Git
 * GitHub
 * IntelliJ IDEA
@@ -235,21 +238,7 @@ Les bases de données sont développées avec **PostgreSQL** et exploitées avec
 
 # 🚀 Installation et exécution
 
-## 1. Prérequis
-
-Avant de lancer le projet, installer :
-
-* Java 21
-* Maven
-* Node.js et npm
-* Angular CLI
-* Docker
-* PostgreSQL ou Docker Desktop
-* Keycloak
-
----
-
-## 2. Cloner le projet
+## 1. Cloner le projet
 
 ```bash
 git clone -b dev https://github.com/MOKDAD2107/PFE--Soutenance-.git
@@ -272,51 +261,12 @@ GROQ_API_KEY=your_groq_api_key
 POSTGRES_USERNAME=postgres
 POSTGRES_PASSWORD=your_postgresql_password
 ```
-> Spring Boot ne lit pas automatiquement le fichier .env. Dans IntelliJ:
->
-> ouvrir Run > Edit Configurations, choisir le service, puis Modify options > Environment variables et y recopier les variables (séparées par ;). Variables nécessaires : OPENWEATHER_API_KEY (weather-service), GROQ_API_KEY (ai-agent-service) et le mot de passe PostgreSQL.
-
-# 🌦️ Configuration OpenWeatherMap
-
-Le Weather Service utilise l'API OpenWeatherMap.
-
-Créer un compte sur OpenWeatherMap et récupérer une clé API.
-
-La clé est ensuite fournie à l'application via :
-
-```env
-OPENWEATHER_API_KEY=your_api_key
-```
-
-La configuration Spring utilise :
-
-```properties
-openweathermap.api.key=${OPENWEATHER_API_KEY}
-```
-
----
-
-# 🤖 Configuration Groq
-
-L'AI Agent Service utilise Groq pour accéder au modèle de langage.
-
-Créer une clé API Groq puis définir :
-
-```env
-GROQ_API_KEY=your_groq_api_key
-```
-
-La configuration Spring utilise :
-
-```properties
-spring.ai.openai.api-key=${GROQ_API_KEY}
-```
-
-Le service utilise l'API compatible OpenAI de Groq.
-
+> Avec Docker Compose, le fichier `.env` de la racine est lu automatiquement. Variables utilisées : `OPENWEATHER_API_KEY` (weather-service), `GROQ_API_KEY` (ai-agent-service) et `POSTGRES_PASSWORD`.
 ---
 
 # 🔑 Configuration Keycloak
+
+> **Avec Docker**, le realm `ecowatch` est importé automatiquement au démarrage depuis `docker/keycloak/ecowatch-realm.json`. Cet import **ne contient pas d'utilisateur** : voir « Créer un utilisateur » dans la section Docker ci-dessous.
 
 Créer un realm Keycloak :
 
@@ -343,19 +293,73 @@ Les services sécurisés utilisent JWT pour vérifier l'identité et les autoris
 
 # ▶️ Démarrage du projet
 
-L'ordre recommandé de démarrage est :
+## 🐳 Avec Docker (recommandé)
 
-```text
-1. PostgreSQL
-2. Keycloak
-3. Eureka Server
-4. Config Server
-5. Microservices
-6. API Gateway
-7. Angular Frontend
+Aucune installation de Java, Maven, Node.js, PostgreSQL ou Keycloak n'est nécessaire : seul **Docker Desktop** est requis, avec plusieurs Go de RAM disponibles (8 Go recommandés). Le **premier démarrage prend 4 à 5 minutes**, car les services attendent que le Config Server soit prêt.
+
+La configuration des services est lue au démarrage depuis le dépôt [`config-ecowatch`](https://github.com/MOKDAD2107/config-ecowatch) (branche `dev`) : une connexion Internet est nécessaire.
+
+### Option A — à partir des images publiées sur GHCR
+
+Aucune compilation locale : les images sont téléchargées depuis GitHub Container Registry.
+
+```bash
+docker compose -f docker-compose.deploy.yml pull
+docker compose -f docker-compose.deploy.yml up -d
 ```
 
-L'AI Agent Service peut ensuite communiquer avec Groq et les services internes via les APIs disponibles.
+Pour figer une version précise des images, ajouter `TAG=<identifiant-du-commit>` devant la commande `up`.
+
+### Option B — construction locale des images
+
+```bash
+docker compose up -d --build
+```
+
+### Vérification
+
+```bash
+docker compose ps
+```
+
+Tous les services doivent être `Up` (`healthy` pour Eureka, PostgreSQL et le Config Server).
+
+| Interface | Adresse |
+|---|---|
+| Application | http://localhost:4200 |
+| Eureka | http://localhost:8761 |
+| Console Keycloak | http://localhost:8080 |
+
+| Service | Port |
+|---|---|
+| Frontend Angular (nginx) | 4200 |
+| API Gateway | 8888 |
+| Weather Service | 8082 |
+| IoT Service | 8083 |
+| Data Aggregation Service | 8084 |
+| AI Agent Service | 8087 |
+| Config Service | 9999 |
+| Discovery Service (Eureka) | 8761 |
+| Keycloak | 8080 |
+| PostgreSQL | 5432 |
+
+### Créer un utilisateur
+
+Dans la console Keycloak (les identifiants d'administration définis dans le compose sont réservés au développement) :
+
+1. Sélectionner le realm **ecowatch**, puis **Users**, puis **Add user**.
+2. Onglet **Credentials** : définir un mot de passe (option **Temporary** désactivée).
+3. Onglet **Role mapping** : attribuer le rôle `USER` ou `ADMIN`.
+
+Se connecter ensuite sur http://localhost:4200.
+
+### Arrêt
+
+```bash
+docker compose down
+```
+
+> N'ajoutez **pas** l'option `-v` : elle supprime les volumes, donc les données PostgreSQL et la configuration Keycloak.
 
 ---
 
@@ -477,38 +481,33 @@ L'assistant ne repose pas sur une base documentaire RAG dans cette version. Il i
 
 # 📁 Structure du projet
 
-Une organisation possible du repository est :
-
 ```text
-EcoWatch/
+PFE--Soutenance-/
 │
-├── config-repo/
-│   ├── application.properties
-│   ├── WEATHER-SERVICE.properties
-│   ├── IOT-SERVICE.properties
-│   ├── DATA-AGGREGATION-SERVICE.properties
-│   └── AI-AGENT-SERVICE.properties
+├── .github/workflows/          
+│
+├── docker/
+│   ├── keycloak/               
+│   └── postgres/init.sql       
 │
 ├── config-service/
-│
 ├── discovery-service/
-│
 ├── gateway-service/
-│
 ├── weather-service/
-│
 ├── iot-service/
-│
 ├── data-aggregation-service/
-│
 ├── ai-agent-service/
-│
 ├── ecowatch-frontend/
 │
-├── .env
+├── imgs/
+├── docker-compose.yml          
+├── docker-compose.deploy.yml   
+├── .env.example
 ├── .gitignore
 └── README.md
 ```
+
+La configuration centralisée des services (`application.properties`, `WEATHER-SERVICE.properties`, etc.) se trouve dans un dépôt séparé : [`config-ecowatch`](https://github.com/MOKDAD2107/config-ecowatch).
 
 ---
 
